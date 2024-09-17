@@ -132,12 +132,12 @@ if __name__ == "__main__":
   cache = LegislatorInfo()
   save_caucus(
               "Republican Study Committee",
-              "republicanstudy.yaml",
+              "rsc.yaml",
               republican_study_committee(cache),
               cache)
   save_caucus(
               "Republican Governance Group",
-              "republicangovernance.yaml",
+              "rgg.yaml",
               republican_governance_group(cache),
               cache)
   save_caucus(
@@ -148,13 +148,13 @@ if __name__ == "__main__":
               cache)
   save_caucus(
               "Congressional Progressive Caucus",
-              "congressionalprogressive.yaml",
+              "cpc.yaml",
               scrape_for_legislator_homepage_links("https://progressives.house.gov/caucus-members",
                                                    { "" }, cache),
               cache)
   save_caucus(
               "Problem Solvers Caucus",
-              "problemsolvers.yaml",
+              "psc.yaml",
               scrape_for_legislator_homepage_links("https://problemsolverscaucus.house.gov/caucus-members",
                                                    { "www.house.gov" }, cache),
               cache)
@@ -169,4 +169,22 @@ save_caucus(
               "mainstreet.yaml",
               scrape_for_legislator_homepage_links("https://mainstreetcaucus.house.gov/membership",
                                                    { "www.house.gov" }, cache),
+              cache)
+save_caucus(
+              "Congressional Black Caucus",
+              "cbc.yaml",
+              scrape_for_legislator_homepage_links("https://cbc.house.gov/membership/",
+                                                   { "www.house.gov", "cbc.house.gov" }, cache),
+              cache)
+save_caucus(
+              "Congressional Hispanic Caucus",
+              "chc.yaml",
+              scrape_for_legislator_homepage_links("https://chc.house.gov/members",
+                                                   { "www.house.gov" }, cache),
+              cache)
+save_caucus(
+              "Congressional Asian Pacific American Caucus",
+              "capac.yaml",
+              scrape_for_legislator_homepage_links("https://capac-chu.house.gov/members",
+                                                   { "www.house.gov", "capac-chu.house.gov" }, cache),
               cache)
