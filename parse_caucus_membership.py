@@ -155,6 +155,18 @@ if __name__ == "__main__":
   save_caucus(
               "Problem Solvers Caucus",
               "problemsolvers.yaml",
-              scrape_for_legislator_homepage_links("https://problemsolverscaucus.house.gov/caucus-members", 
+              scrape_for_legislator_homepage_links("https://problemsolverscaucus.house.gov/caucus-members",
+                                                   { "www.house.gov" }, cache),
+              cache)
+  save_caucus(
+              "Blue Dog Coalition",
+              "bluedog.yaml",
+              scrape_for_legislator_homepage_links("https://bluedogcaucus-golden.house.gov/members",
+                                                   { "www.house.gov", "bluedogcaucus-golden.house.gov" }, cache),
+              cache)
+save_caucus(
+              "Main Street Caucus",
+              "mainstreet.yaml",
+              scrape_for_legislator_homepage_links("https://mainstreetcaucus.house.gov/membership",
                                                    { "www.house.gov" }, cache),
               cache)

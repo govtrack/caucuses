@@ -186,7 +186,7 @@ def predict_vote(vote_id, votes):
     Y.append(vote)
     X.append({
              "intercept": 1,
-             "ideology": ideology[id],
+             #"ideology": ideology[id],
              "party_Republican": party[id] == "Republican",
              }
              |
