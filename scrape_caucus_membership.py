@@ -44,6 +44,10 @@ class LegislatorInfo:
       url = urlparse(url).netloc
       self.website_map[url] = p['id']['bioguide']
 
+    # Hard code some redirects for pages that haven't been
+    # updated to new URLs.
+    self.website_map["mikelevin.house.gov"] = self.website_map["levin.house.gov"]
+
 
 def scrape_for_legislator_homepage_links(url, exclude_urls, filenamebase, cache):
   # Scan the website member list for links to legislator homepages.
@@ -63,7 +67,7 @@ def scrape_for_legislator_homepage_links(url, exclude_urls, filenamebase, cache)
 
 
 def republican_study_committee(filenamebase, cache):
-  url = "https://rsc-hern.house.gov/about/membership"
+  url = "https://rsc-pfluger.house.gov/about/membership"
   res = requests.get(url)
   soup = BeautifulSoup(res.text, 'html.parser')
   members = set()
@@ -203,6 +207,6 @@ save_caucus(
               "Congressional Asian Pacific American Caucus",
               "capac",
               scrape_for_legislator_homepage_links, {
-                "url": "https://capac-chu.house.gov/members",
-                "exclude_urls": { "www.house.gov", "capac-chu.house.gov" } },
+                "url": "https://capac.house.gov/members",
+                "exclude_urls": { "www.house.gov", "capac.house.gov" } },
               cache)
