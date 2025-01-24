@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import datetime
 from collections import defaultdict
 import unicodedata
+import os
 
 
 headers = {
@@ -44,9 +45,8 @@ class LegislatorInfo:
       self.website_map[url] = p['id']['bioguide']
 
 
-def scrape_for_legislator_homepage_links(url, exclude_urls, cache):
-  # Scan the New Dems website member list for links to
-  # legislator pages.
+def scrape_for_legislator_homepage_links(url, exclude_urls, filenamebase, cache):
+  # Scan the website member list for links to legislator homepages.
   res = requests.get(url)
   soup = BeautifulSoup(res.text, 'html.parser')
   members = set()
@@ -56,14 +56,15 @@ def scrape_for_legislator_homepage_links(url, exclude_urls, cache):
       href = urlparse(href).netloc
       if "house.gov" in href.lower() and href not in exclude_urls:
         if href not in cache.website_map:
-          print("Failed to map legislator from", href, "in", url)
+          print(filenamebase, url, "Failed to map legislator from", href)
         else:
           members.add(cache.website_map[href])
   return members
 
 
-def republican_study_committee(cache):
-  res = requests.get("https://rsc-hern.house.gov/about/membership")
+def republican_study_committee(filenamebase, cache):
+  url = "https://rsc-hern.house.gov/about/membership"
+  res = requests.get(url)
   soup = BeautifulSoup(res.text, 'html.parser')
   members = set()
   for node in soup.select('.each-member-name'):
@@ -82,12 +83,13 @@ def republican_study_committee(cache):
     if last_name in cache.last_name_map and len(cache.last_name_map[last_name]) == 1:
       members.add(list(cache.last_name_map[last_name])[0])
       continue
-    print("Failed to map RSC legislator from", name)
+    print(filenamebase, url, "Failed to map RSC legislator from", name)
   return members
 
 
-def republican_governance_group(cache):
-  res = requests.get("https://republicangovernance.com/", headers=headers)
+def republican_governance_group(filenamebase, cache):
+  url = "https://republicangovernance.com/"
+  res = requests.get(url, headers=headers)
   soup = BeautifulSoup(res.text, 'html.parser')
   members = set()
   for node in soup.select('.genlist li'):
@@ -103,12 +105,14 @@ def republican_governance_group(cache):
     if last_name in cache.last_name_map and len(cache.last_name_map[last_name]) == 1:
       members.add(list(cache.last_name_map[last_name])[0])
       continue
-    print("Failed to map RGG legislator from", name)
+    print(filenamebase, url, "Failed to map RGG legislator from", name)
   return members
 
 
-def save_caucus(caucus_name, filename, members, cache):
-  # Sort members.
+def save_caucus(caucus_name, filenamebase, members_func, members_kwargs, cache):
+  # Scrape and sort.
+  members = members_func(filenamebase=filenamebase, cache=cache,
+                         **members_kwargs)
   members = list(members)
   members.sort()
 
@@ -120,6 +124,12 @@ def save_caucus(caucus_name, filename, members, cache):
     }
     for key in members ]
 
+  # Add directory path to filename.
+  archive_dir = "archive/" + datetime.datetime.now().date().isoformat()
+  os.makedirs(archive_dir, exist_ok=True)
+  filename = archive_dir + "/" + filenamebase + ".yaml"
+
+  # Save.
   with open(filename, "w") as f:
     rtyaml.dump({
                 "name": caucus_name,
@@ -132,59 +142,67 @@ if __name__ == "__main__":
   cache = LegislatorInfo()
   save_caucus(
               "Republican Study Committee",
-              "rsc.yaml",
-              republican_study_committee(cache),
+              "rsc",
+              republican_study_committee, { },
               cache)
   save_caucus(
               "Republican Governance Group",
-              "rgg.yaml",
-              republican_governance_group(cache),
+              "rgg",
+              republican_governance_group, { },
               cache)
   save_caucus(
               "New Democrat Coalition",
-              "newdems.yaml",
-              scrape_for_legislator_homepage_links("https://newdemocratcoalition.house.gov/members",
-                                                   { "newdemocratcoalition.house.gov" }, cache),
+              "newdems",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://newdemocratcoalition.house.gov/members",
+                "exclude_urls": { "newdemocratcoalition.house.gov" } },
               cache)
   save_caucus(
               "Congressional Progressive Caucus",
-              "cpc.yaml",
-              scrape_for_legislator_homepage_links("https://progressives.house.gov/caucus-members",
-                                                   { "" }, cache),
+              "cpc",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://progressives.house.gov/caucus-members",
+                "exclude_urls": { "" } },
               cache)
   save_caucus(
               "Problem Solvers Caucus",
-              "psc.yaml",
-              scrape_for_legislator_homepage_links("https://problemsolverscaucus.house.gov/caucus-members",
-                                                   { "www.house.gov" }, cache),
+              "psc",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://problemsolverscaucus.house.gov/caucus-members",
+                "exclude_urls": { "www.house.gov" } },
               cache)
   save_caucus(
               "Blue Dog Coalition",
-              "bluedog.yaml",
-              scrape_for_legislator_homepage_links("https://bluedogcaucus-golden.house.gov/members",
-                                                   { "www.house.gov", "bluedogcaucus-golden.house.gov" }, cache),
+              "bluedog",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://bluedogcaucus-golden.house.gov/members",
+                "exclude_urls": { "www.house.gov", "bluedogcaucus-golden.house.gov" } },
               cache)
 save_caucus(
               "Main Street Caucus",
-              "mainstreet.yaml",
-              scrape_for_legislator_homepage_links("https://mainstreetcaucus.house.gov/membership",
-                                                   { "www.house.gov" }, cache),
+              "mainstreet",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://mainstreetcaucus.house.gov/membership",
+                "exclude_urls": { "www.house.gov" } },
               cache)
 save_caucus(
               "Congressional Black Caucus",
-              "cbc.yaml",
-              scrape_for_legislator_homepage_links("https://cbc.house.gov/membership/",
-                                                   { "www.house.gov", "cbc.house.gov" }, cache),
+              "cbc",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://cbc.house.gov/membership/",
+                "exclude_urls": { "www.house.gov", "cbc.house.gov" } },
               cache)
 save_caucus(
               "Congressional Hispanic Caucus",
-              "chc.yaml",
-              scrape_for_legislator_homepage_links("https://chc.house.gov/members",
-                                                   { "www.house.gov" }, cache),
+              "chc",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://chc.house.gov/members",
+                "exclude_urls": { "www.house.gov" } },
               cache)
 save_caucus(
               "Congressional Asian Pacific American Caucus",
-              "capac.yaml",
-              scrape_for_legislator_homepage_links("https://capac-chu.house.gov/members",
-                                                   { "www.house.gov", "capac-chu.house.gov" }, cache),
+              "capac",
+              scrape_for_legislator_homepage_links, {
+                "url": "https://capac-chu.house.gov/members",
+                "exclude_urls": { "www.house.gov", "capac-chu.house.gov" } },
               cache)
