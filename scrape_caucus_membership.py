@@ -37,7 +37,10 @@ class LegislatorInfo:
 
     self.name_map["Rich McCormick"] = self.name_map["Richard McCormick"]
     self.name_map["Tom Kean, Jr."] = self.name_map["Thomas Kean"]
+    self.name_map["Tom Kean Jr."] = self.name_map["Thomas Kean"]
     self.name_map["GT Thompson"] = self.name_map["Glenn Thompson"]
+    self.name_map["Mike Haridopolis"] = self.name_map["Mike Haridopolos"]
+    self.name_map["Greg Murphy"] = self.name_map["Gregory Murphy"]
 
     # Make a map from legislator names to IDs.
     self.last_name_map = defaultdict(lambda : set())
@@ -119,6 +122,48 @@ def republican_governance_group(filenamebase, cache):
   return members
 
 
+def justice_democrats(filenamebase, cache):
+  url = "https://justicedemocrats.com/candidates/"
+  res = requests.get(url, headers=headers)
+  soup = BeautifulSoup(res.text, 'html.parser')
+  members = set()
+  for node in soup.select('.cand-card__grid--incumbent a span'):
+    if not node.string: continue
+    name = node.string\
+      .strip()
+    if name in cache.name_map:
+      members.add(cache.name_map[name])
+      continue
+    last_name = name.split(" ")[-1]
+    if last_name in cache.last_name_map and len(cache.last_name_map[last_name]) == 1:
+      members.add(list(cache.last_name_map[last_name])[0])
+      continue
+    print(filenamebase, url, "Failed to map JD legislator from", name)
+  return members
+
+
+def republican_main_street(filenamebase, cache):
+  url = "https://www.republicanmainstreet.org/members"
+  res = requests.get(url, headers=headers)
+  soup = BeautifulSoup(res.text, 'html.parser')
+  members = set()
+  for node in soup.select('#comp-l8alwwc3 h2 .wixui-rich-text__text'):
+    if not node.string: continue
+    name = node.string\
+      .replace("Sen. ", "")\
+      .replace("Rep. ", "")\
+      .strip()
+    if name in cache.name_map:
+      members.add(cache.name_map[name])
+      continue
+    last_name = name.split(" ")[-1]
+    if last_name in cache.last_name_map and len(cache.last_name_map[last_name]) == 1:
+      members.add(list(cache.last_name_map[last_name])[0])
+      continue
+    print(filenamebase, url, "Failed to map RMS legislator from", name)
+  return members
+
+
 def save_caucus(caucus_name, filenamebase, members_func, members_kwargs, cache):
   # Scrape and sort.
   members = members_func(filenamebase=filenamebase, cache=cache,
@@ -188,31 +233,41 @@ if __name__ == "__main__":
                 "url": "https://bluedogcaucus-golden.house.gov/members",
                 "exclude_urls": { "www.house.gov", "bluedogcaucus-golden.house.gov" } },
               cache)
-save_caucus(
+  save_caucus(
               "Main Street Caucus",
               "mainstreet",
               scrape_for_legislator_homepage_links, {
                 "url": "https://mainstreetcaucus.house.gov/membership",
                 "exclude_urls": { "www.house.gov" } },
               cache)
-save_caucus(
+  save_caucus(
               "Congressional Black Caucus",
               "cbc",
               scrape_for_legislator_homepage_links, {
                 "url": "https://cbc.house.gov/membership/",
                 "exclude_urls": { "www.house.gov", "cbc.house.gov" } },
               cache)
-save_caucus(
+  save_caucus(
               "Congressional Hispanic Caucus",
               "chc",
               scrape_for_legislator_homepage_links, {
                 "url": "https://chc.house.gov/members",
                 "exclude_urls": { "www.house.gov" } },
               cache)
-save_caucus(
+  save_caucus(
               "Congressional Asian Pacific American Caucus",
               "capac",
               scrape_for_legislator_homepage_links, {
                 "url": "https://capac.house.gov/members",
                 "exclude_urls": { "www.house.gov", "capac.house.gov" } },
+              cache)
+  save_caucus(
+              "Justice Democrats",
+              "justice",
+              justice_democrats, { },
+              cache)
+  save_caucus(
+              "Republican Main Street",
+              "rmainstreet",
+              republican_main_street, { },
               cache)
