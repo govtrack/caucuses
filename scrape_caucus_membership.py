@@ -6,6 +6,7 @@ import datetime
 from collections import defaultdict
 import unicodedata
 import os
+import re
 
 
 headers = {
@@ -30,6 +31,13 @@ class LegislatorInfo:
       self.name_map[name] = p['id']['bioguide']
       self.name_map[u"".join(c for c in unicodedata.normalize('NFKD', name)
                              if not unicodedata.combining(c))] = p['id']['bioguide']
+      self.name_map[p['name']['first'] + " " + p['name']['last']] = p['id']['bioguide']
+      if 'nickname' in p['name']:
+        self.name_map[p['name']['nickname'] + " " + p['name']['last']] = p['id']['bioguide']
+
+    self.name_map["Rich McCormick"] = self.name_map["Richard McCormick"]
+    self.name_map["Tom Kean, Jr."] = self.name_map["Thomas Kean"]
+    self.name_map["GT Thompson"] = self.name_map["Glenn Thompson"]
 
     # Make a map from legislator names to IDs.
     self.last_name_map = defaultdict(lambda : set())
@@ -40,9 +48,13 @@ class LegislatorInfo:
     # bioguide IDs.
     self.website_map = { }
     for p in self.legislators_current:
-      url = p['terms'][-1]['url']
-      url = urlparse(url).netloc
-      self.website_map[url] = p['id']['bioguide']
+      try:
+        url = p['terms'][-1]['url']
+        url = urlparse(url).netloc
+        self.website_map[url] = p['id']['bioguide']
+      except Exception as e:
+        print(p['name']['official_full'], "missing website URL")
+        continue
 
     # Hard code some redirects for pages that haven't been
     # updated to new URLs.
@@ -67,19 +79,13 @@ def scrape_for_legislator_homepage_links(url, exclude_urls, filenamebase, cache)
 
 
 def republican_study_committee(filenamebase, cache):
-  url = "https://rsc-pfluger.house.gov/about/membership"
-  res = requests.get(url)
-  soup = BeautifulSoup(res.text, 'html.parser')
+  url = "https://rsc-pfluger.house.gov/about/leadership-0"
+  body = requests.get(url).text
   members = set()
-  for node in soup.select('.each-member-name'):
-    name = node.string\
+  for name in re.findall(r"name: \"(.*?)\"", body):
+    name = name\
       .replace("Rep. ", "")\
-      .replace("Chairman ", "")\
-      .replace("Speaker ", "")\
-      .replace("Majority Leader ", "")\
-      .replace("Minority Leader ", "")\
-      .replace("  ", " ")\
-      .strip()
+      .replace("RSC Vice-Chair ", "")
     if name in cache.name_map:
       members.add(cache.name_map[name])
       continue

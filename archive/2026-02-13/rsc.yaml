@@ -1,0 +1,41 @@
+name: Republican Study Committee
+updated: '2026-02-13T11:15:18.902652'
+members:
+- id: A000379
+  name: Mark Alford
+- id: B001314
+  name: Aaron Bean
+- id: B001325
+  name: Sheri Biggs
+- id: C001118
+  name: Ben Cline
+- id: F000450
+  name: Virginia Foxx
+- id: F000472
+  name: Scott Franklin
+- id: F000475
+  name: Brad Finstad
+- id: G000576
+  name: Glenn Grothman
+- id: H001082
+  name: Kevin Hern
+- id: H001098
+  name: Abraham J. Hamadeh
+- id: H001099
+  name: Mike Haridopolos
+- id: L000597
+  name: Laurel M. Lee
+- id: M000871
+  name: Tracey Mann
+- id: M001177
+  name: Tom McClintock
+- id: M001218
+  name: Richard McCormick
+- id: O000019
+  name: Jay Obernolte
+- id: P000048
+  name: August Pfluger
+- id: S001176
+  name: Steve Scalise
+- id: T000478
+  name: Claudia Tenney
