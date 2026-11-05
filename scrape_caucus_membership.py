@@ -27,7 +27,8 @@ class LegislatorInfo:
     # Make a map from legislator names to IDs.
     self.name_map = { }
     for p in self.legislators_current:
-      name = p['name']['official_full']
+      name = p['name'].get('official_full')
+      if not name: continue
       self.name_map[name] = p['id']['bioguide']
       self.name_map[u"".join(c for c in unicodedata.normalize('NFKD', name)
                              if not unicodedata.combining(c))] = p['id']['bioguide']
@@ -56,7 +57,7 @@ class LegislatorInfo:
         url = urlparse(url).netloc
         self.website_map[url] = p['id']['bioguide']
       except Exception as e:
-        print(p['name']['official_full'], "missing website URL")
+        print(p['name'].get('official_full', p), "missing website URL")
         continue
 
     # Hard code some redirects for pages that haven't been
@@ -177,7 +178,7 @@ def save_caucus(caucus_name, filenamebase, members_func, members_kwargs, cache):
       "id": key,
       "name": cache.id_map[key]["name"]["official_full"]
     }
-    for key in members ]
+    for key in members if cache.id_map[key]["name"].get("official_full")]
 
   # Add directory path to filename.
   archive_dir = "archive/" + datetime.datetime.now().date().isoformat()
