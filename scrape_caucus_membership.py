@@ -259,7 +259,7 @@ if __name__ == "__main__":
               "Congressional Asian Pacific American Caucus",
               "capac",
               scrape_for_legislator_homepage_links, {
-                "url": "https://capac.house.gov/members",
+                "url": "https://capac.house.gov/membership",
                 "exclude_urls": { "www.house.gov", "capac.house.gov" } },
               cache)
   save_caucus(
